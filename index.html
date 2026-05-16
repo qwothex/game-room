@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Honk&display=swap" rel="stylesheet">
+    <title>Vladimir Nariadov</title>
+    <style>
+      video {
+        pointer-events: none;
+        user-select: none;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <video
+      id="rick-roll"
+      src='videos/Rick_Roll.mp4'
+      loop
+      muted
+      preload="auto"
+      controls="false"
+    >
+    </video>
+
+    <video
+      id="glitch-video"
+      src="videos/downloadV.mp4"
+      loop
+      muted
+      preload="auto"
+      controls="false"
+    >
+    </video>
+
+    <!-- <div style="display: flex; justify-content: center; position: relative;">
+      <canvas width="224" height="256" id="donkey-kong-canvas" style="width: 50%; image-rendering: pixelated"></canvas>
+    </div> -->
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
