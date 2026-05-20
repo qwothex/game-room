@@ -37,7 +37,7 @@ const mesh = new THREE.Mesh(
 scene.add(mesh)
 
 const scoreCanvas = document.createElement('canvas');
-    scoreCanvas.width = 256;
+    scoreCanvas.width = 512;
     scoreCanvas.height = 64;
 
 const scoreCtx = scoreCanvas.getContext('2d')!;
@@ -59,17 +59,19 @@ font.load().then((loadedFont) => {
 const scoreTexture = new THREE.CanvasTexture(scoreCanvas);
 
 const hudPlane = new THREE.Mesh(
-    new THREE.PlaneGeometry(1, 0.25),
+    new THREE.PlaneGeometry(2, 0.25),
     new THREE.MeshBasicMaterial({ map: scoreTexture, transparent: true })
 );
 
-hudPlane.position.set(0.9, 0.5, -0.1);
+hudPlane.position.set(0.75, 0.5, -0.1);
 
 camera.add(hudPlane)
 scene.add(camera)
 
 export const updateScore = (newScore: number) => {
     scoreCtx.clearRect(0, 0, scoreCanvas.width, scoreCanvas.height)
+    scoreCtx.font = '24px Donkey-kong'
+    scoreCtx.fillStyle = 'white'
     scoreCtx.fillText(`Score: ${newScore}`, scoreCanvas.width / 2, scoreCanvas.height / 2)
     scoreTexture.needsUpdate = true
 }

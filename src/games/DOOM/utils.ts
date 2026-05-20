@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { renderer } from '../../utils/renderer';
 
 export const doomRenderTarget = new THREE.WebGLRenderTarget(1024, 1024)
 
@@ -78,22 +79,31 @@ export const keyMap: { [key: string]: number } = {
   '5': '5'.charCodeAt(0),
 };
 
+const pointerFn = () => {
+  renderer.domElement.requestPointerLock();
+}
+
+export function releasePointerLock(canvas: HTMLCanvasElement) {
+  canvas.removeEventListener('click', pointerFn);
+  if (document.pointerLockElement) {
+    document.exitPointerLock();
+  }
+}
+
 export function setupMouseInput(canvas: HTMLCanvasElement, Module: any) {
   // Request pointer lock for FPS controls
-  canvas.addEventListener('click', () => {
-    canvas.requestPointerLock();
-  });
+  canvas.addEventListener('click', pointerFn);
 
   // Mouse movement (when pointer is locked)
   document.addEventListener('mousemove', (e) => {
     if (document.pointerLockElement === canvas) {
       // movementX/Y gives relative movement
       const deltaX = e.movementX;
-      const deltaY = e.movementY;
+      // const deltaY = e.movementY;
       
       // Doom uses X for turning, Y for forward/back (optional)
       if (Module._doom_mouse_move) {
-        Module._doom_mouse_move(deltaX, deltaY);
+        Module._doom_mouse_move(deltaX, 0);
       }
     }
   });
@@ -111,12 +121,5 @@ export function setupMouseInput(canvas: HTMLCanvasElement, Module: any) {
       Module._doom_mouse_button(e.button, 0);
     }
     e.preventDefault();
-  });
-
-  // Exit pointer lock with Escape
-  document.addEventListener('pointerlockchange', () => {
-    if (!document.pointerLockElement) {
-      console.log('Pointer lock released');
-    }
   });
 }

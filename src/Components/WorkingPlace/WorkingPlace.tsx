@@ -12,14 +12,15 @@ import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import s from './WorkingPlace.module.scss'
 import { SpaceRabbitModule } from "../../games/SpaceRabbit/utils";
 import { CrossTheRoadModule } from '../../games/CrossTheRoad/utils'
-import { DoomModule, startDoom } from '../../games/DOOM/doom1.ts'
+import { destroyDoom, DoomModule, startDoom } from '../../games/DOOM/doom1.ts'
+import { releasePointerLock } from '../../games/DOOM/utils'
 import { GamesType } from "../../types/games";
 import { resolveCanvasGameKeyDown, resolveCanvasGameKeyUp, resolveCrossTheRoadKeys, resolveDoomKeysDown, resolveDoomKeysUp, resolveRabbitKeys } from "../../utils/Functions/resolveGameAction";
 import { resolveInitTarget } from "../../utils/Functions/resolveInitTarget.ts";
 import { scene } from '../../utils/scene.ts'
 import { renderer } from '../../utils/renderer.ts'
 import { camera } from '../../utils/camera.ts'
-import { DonkeyKongModule } from "../../games/DonkeyKong/donkeyKong.ts";
+import { DonkeyKongModule, resetMario } from "../../games/DonkeyKong/donkeyKong.ts";
 RectAreaLightUniformsLib.init();
 
 gsap.registerPlugin(ScrollTrigger)
@@ -32,6 +33,10 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
 
     useEffect(() => {
         gameRef.current = game;
+        if (game !== 'doom') { 
+            releasePointerLock(renderer.domElement);
+            destroyDoom();
+        }
     }, [game]);
 
     const container = useRef<HTMLDivElement>(null);
@@ -432,6 +437,8 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
 
                             setGame("donkeykong")
 
+                            resetMario()
+
                             setTimeout(() => screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150)
                             rectLight.color = new THREE.Color(0xffffff)
 
@@ -526,8 +533,8 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                 <p>ctrl + LMB to move</p>
                 <p>LMB to rotate</p>
             </div> */}
-            <div id="lottie1" className={`${s.lottie}`}></div>
-            <div id="lottie2" className={`${s.lottie}`}></div>
+            <div id="lottie1" className={s.lottie}></div>
+            <div id="lottie2" className={s.lottie}></div>
         </div>
     )
 }

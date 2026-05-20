@@ -5,7 +5,7 @@ import { initializeMap, metadata } from './Components/Map';
 import { minTileIndex, tileSize, maxTileIndex } from '../../constants/CTR';
 import { Row, RowType } from '../../types/CTRGameTypes';
 import { camera } from './Components/Camera';
-import { character, initializePlayer } from './Components/Character';
+import { cancelCharacterTweens, character, initializePlayer } from './Components/Character';
 import { hitTest } from './Components/HitTest';
 
 export const scene = new THREE.Scene();
@@ -161,6 +161,7 @@ export const initializeGame = () => {
 }
 
 export const handleHit = (isForward: boolean) => {
+  cancelCharacterTweens()
   isForward ? character.character.children[0].rotateY(Math.PI / 2) : character.character.children[0].rotateY(-Math.PI / 2)
   character.isDead = true
 }

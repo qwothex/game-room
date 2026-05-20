@@ -7,8 +7,10 @@ import { gridCell } from "./helpers/grid"
 import { Animations } from "./Animations"
 import { FrameIndexPattern } from "./FrameIndexPattern"
 import { CLIMB, DEAD, JUMP_LEFT, JUMP_RIGHT, STAND_CLIMB, STAND_LEFT, STAND_LEFT_HAMMER, STAND_RIGHT, STAND_RIGHT_HAMMER, STAND_UP, WALK_LEFT, WALK_LEFT_HAMMER, WALK_RIGHT, WALK_RIGHT_HAMMER } from "./Animations/HeroAnimations"
+import { FIREBALL_IDLE } from "./Animations/FlameAnimations"
 import { ladders, rows } from "./levels/level1"
 import { barrels, emptyBarrels, spawnBarrel, updateBarrels } from "./Barrel"
+import { flame, spawnFlame, resetFlame, updateFlame } from "./Flame"
 // import { GameLoop } from "./GameLoop"
 import { THROW_BARREL } from "./Animations/KongAnimations"
 import { ctx, renderTarget, scene, texture, camera, updateScore } from "./utils"
@@ -36,6 +38,18 @@ const hammerSprite1 = {
     }),
     isPicked: false
 }
+
+const flameSprite = new Sprite({
+    resource: resources.images.fireball,
+    frameSize: new Vector2(13, 15),
+    hFrames: 1,
+    vFrames: 1,
+    frame: 0,
+    position: new Vector2(0, 0),
+    animations: new Animations({
+        idle: new FrameIndexPattern(FIREBALL_IDLE)
+    })
+})
 
 const kongSprite = new Sprite({
     resource: resources.images.kong,
@@ -91,6 +105,11 @@ const draw = () => {
         slot.sprite.drawImage(ctx!, slot.sprite.position.x - 5, slot.sprite.position.y - 4)
     }
 
+    if (flame.active) {
+        flameSprite.animations?.play('idle')
+        flameSprite.drawImage(ctx!, flame.x - 6, flame.y - 15)
+    }
+
     // for (const b of barrels) {
     //     ctx!.fillStyle = 'red'
     //     ctx!.fillRect(b.sprite.position.x, b.sprite.position.y, 2, 2)
@@ -98,6 +117,19 @@ const draw = () => {
 
     // ctx!.fillStyle = 'red'
     // ctx!.fillRect(marioSprite.position.x, marioSprite.position.y + MARIO_OFFSET_Y, 2, 2)
+
+    if (isWon) {
+        ctx!.fillStyle = 'rgba(0, 0, 0, 0.55)'
+        ctx!.fillRect(0, 0, 224, 256)
+        ctx!.fillStyle = '#FFD700'
+        ctx!.font = 'bold 22px Donkey-kong, monospace'
+        ctx!.textAlign = 'center'
+        ctx!.textBaseline = 'middle'
+        ctx!.fillText('YOU WIN!', 112, 118)
+        ctx!.fillStyle = 'white'
+        ctx!.font = '12px Donkey-kong, monospace'
+        ctx!.fillText(`Score: ${score}`, 112, 145)
+    }
 
     texture.needsUpdate = true
 
@@ -155,6 +187,8 @@ let hasHammer = false;
 let hammerTimeout: number | undefined
 
 let score = 0
+let isWon = false
+let winTimeout: number | undefined
 
 const checkRow = () => {
     if(!isClimbing && !isFalling) return;
@@ -385,6 +419,51 @@ const checkBarrelCollision = () => {
     }
 }
 
+const checkFlameCollision = () => {
+    if (!flame.active || isDead) return
+    const dx = flame.x - marioSprite.position.x
+    const dy = (flame.y - 6) - marioSprite.position.y - MARIO_OFFSET_Y
+
+    if (isJumping && !flame.isJumped) {
+        const aboveFlame = dy > 10 && dy < 30
+        const passingOver = Math.abs(dx) < 16
+        if (aboveFlame && passingOver) {
+            flame.isJumped = true
+            score += 100
+            updateScore(score)
+        }
+    }
+    if (flame.isJumped && Math.abs(dx) > 20) {
+        flame.isJumped = false
+    }
+
+    if (hasHammer) {
+        const REACH = 20
+        if (facing === 'RIGHT') {
+            const inFront = dx >= -10 && dx <= REACH
+            const inArc = dy >= -REACH && dy <= 4
+            if (inFront && inArc) {
+                score += 100
+                updateScore(score)
+                flame.active = false
+            }
+        } else if (facing === 'LEFT') {
+            const inFront = dx <= 10 && dx >= -REACH
+            const inArc = dy >= -REACH && dy <= 4
+            if (inFront && inArc) {
+                score += 100
+                updateScore(score)
+                flame.active = false
+            }
+        }
+    } else if (Math.abs(dx) < 10 && Math.abs(dy) <= 12) {
+        clearInterval(spawnInterval)
+        spawnInterval = undefined
+        emptyBarrels()
+        isDead = true
+    }
+}
+
 const pickUpHammer = () => {
     hasHammer = true
     
@@ -416,7 +495,7 @@ const checkHammerCollision = () => {
     }
 }
 
-const resetMario = () => {
+export const resetMario = () => {
     marioSprite.position = new Vector2(gridCell(10), gridCell(27))
     vy = 0;
     vx = 0;
@@ -434,6 +513,11 @@ const resetMario = () => {
     hammerSprite1.isPicked = false
     score = 0
     updateScore(0)
+    emptyBarrels()
+    resetFlame()
+    isWon = false
+    clearTimeout(winTimeout)
+    winTimeout = undefined
 }
 
 const scheduleNextBarrel = () => {
@@ -455,17 +539,23 @@ const inGameUpdate = (delta: number) => {
     
     marioSprite.step(delta)
     kongSprite.step(delta)
+    flameSprite.step(delta)
     
+    if(isWon) return
+
     if(!isDead){
 
         if (!spawnInterval) {
             scheduleNextBarrel()
+            spawnFlame()
         }
 
         tryMove()
         checkRow()
         updateBarrels()
+        updateFlame(currentRow, marioSprite.position.x)
         checkBarrelCollision()
+        checkFlameCollision()
         checkHammerCollision()
         for (const slot of barrels) {
             slot.sprite.step(delta)
@@ -474,6 +564,17 @@ const inGameUpdate = (delta: number) => {
         marioSprite.position.x = Math.max(SCENE_LEFT, Math.min(SCENE_RIGHT, marioSprite.position.x))
         if(isJumping){
             marioSprite.animations?.play(facing === RIGHT ? "jumpRight" : "jumpLeft")
+        }
+
+        if (currentRow === 6 && !isClimbing && !isFalling) {
+            isWon = true
+            clearInterval(spawnInterval)
+            spawnInterval = undefined
+            emptyBarrels()
+            winTimeout = setTimeout(() => {
+                winTimeout = undefined
+                resetMario()
+            }, 6000)
         }
     }else{
         marioSprite.animations?.play("dead")

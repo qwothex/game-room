@@ -9,6 +9,21 @@ import { initializeGame, updateScore } from "../utils";
 
 let animPlaying = false
 
+export function cancelCharacterTweens() {
+  gsap.killTweensOf(character.character.position)
+  gsap.killTweensOf(character.character.children[0].position)
+  gsap.killTweensOf(character.character.children[0])
+  animPlaying = false
+}
+
+export const restartGame = () => {
+  initializeGame()
+  animPlaying = true
+  gsap.delayedCall(0.35, () => {
+    animPlaying = false
+  })
+}
+
 function Character() {
 
   const characterRoot = new THREE.Group();
@@ -171,12 +186,12 @@ export function step(direction: Direction) {
           onComplete: () => {animPlaying = false}
         }, '>')
     };
-  }else{
-    initializeGame()
   }
 }
 
 export const initializePlayer = () => {
+  cancelCharacterTweens()
+
   character.character.position.x = 0;
   character.character.position.y = 0;
   character.character.children[0].position.z = 0;
@@ -245,18 +260,28 @@ export function endsUpInValidPosition(
   return true;
 }
 
+const tryRestart = () => {
+  if (!character.isDead) return false
+  restartGame()
+  return true
+}
+
 export const crossRightButtonClicked = () => {
-  if((!animPlaying && endsUpInValidPosition('right')) || character.isDead) step('right')
+  if (tryRestart()) return
+  if (!animPlaying && endsUpInValidPosition('right')) step('right')
 }
 
 export const crossLeftButtonClicked = () => {
-  if((!animPlaying && endsUpInValidPosition('left')) || character.isDead) step('left')
+  if (tryRestart()) return
+  if (!animPlaying && endsUpInValidPosition('left')) step('left')
 }
 
 export const crossUpButtonClicked = () => {
-  if((!animPlaying && endsUpInValidPosition('forward')) || character.isDead) step('forward')
+  if (tryRestart()) return
+  if (!animPlaying && endsUpInValidPosition('forward')) step('forward')
 }
 
 export const crossDownButtonClicked = () => {
-  if((!animPlaying && endsUpInValidPosition('backward')) || character.isDead) step('backward')
+  if (tryRestart()) return
+  if (!animPlaying && endsUpInValidPosition('backward')) step('backward')
 }

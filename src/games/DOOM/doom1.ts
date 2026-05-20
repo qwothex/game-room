@@ -6,10 +6,14 @@ import { renderer } from '../../utils/renderer.js';
 
 export type WADType = 'doom1.wad' | 'freedoom1.wad' | 'freedoom2.wad'
 
-let Module: any;
+export function unlockDoomAudio(Module?: { SDL2?: { audioContext?: AudioContext } }) {
+  const ctx = Module?.SDL2?.audioContext;
+  if (ctx?.state === 'suspended') {
+    void ctx.resume();
+  }
+}
 
-export async function startDoom(WAD: WADType) {
-
+export async function destroyDoom() {
   if (Module) {
     try {
       DoomModule.update = undefined
@@ -18,19 +22,25 @@ export async function startDoom(WAD: WADType) {
       console.error(e)
     }
     Module = null;
-    console.log("MODULE RESET, VALUE: ", Module)
   }
+}
+
+let Module: any;
+
+export async function startDoom(WAD: WADType) {
+
+  await destroyDoom();
 
   Module = await createDoom();
 
   if(Module){
-    console.log("MODULE, VALUE: ", Module)
     const wadResponse = await fetch(WAD);
     const wadBuffer = await wadResponse.arrayBuffer();
     Module.FS.writeFile(WAD, new Uint8Array(wadBuffer));
     setupMouseInput(renderer.domElement, Module);
 
     try{
+      unlockDoomAudio(Module);
       Module._main(1, [WAD]);
     }catch(e){
       console.error(e)

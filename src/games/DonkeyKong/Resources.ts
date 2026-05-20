@@ -1,5 +1,5 @@
 
-type ResourceKey = "background" | "mario" | "barrel" | "hammer" | "kong";
+type ResourceKey = "background" | "mario" | "barrel" | "hammer" | "kong" | "fireball";
 
 interface ImageResource {
 image: HTMLImageElement;
@@ -16,7 +16,8 @@ class Resources {
             mario: "/sprites/mario.png",
             barrel: "/sprites/barrel2.png",
             hammer: '/sprites/hammer.png',
-            kong: '/sprites/kong.png'
+            kong: '/sprites/kong.png',
+            fireball: '/sprites/fireball.png'
         };
 
         this.images = {} as Record<ResourceKey, ImageResource>;
