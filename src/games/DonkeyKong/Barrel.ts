@@ -2,7 +2,7 @@ import { Animations } from "./Animations"
 import { ROLL_LEFT, ROLL_RIGHT } from "./Animations/KongAnimations"
 import { GRAVITY } from "./donkeyKong"
 import { FrameIndexPattern } from "./FrameIndexPattern"
-import { ladders, rows } from "./levels/level1"
+import { barrelLadders, rows } from "./levels/level1"
 import { resources } from "./Resources"
 import Sprite from "./Sprite"
 import { Vector2 } from "./Vector2"
@@ -50,11 +50,10 @@ export const updateBarrels = () => {
             if (floorY !== 0 && b.sprite.position.y >= floorY - dis) {
                 b.sprite.position.y = floorY - dis
                 b.barrel.vy = 0
-                b.barrel.vx = 0
                 b.barrel.row = b.barrel.nextRowSnapshot ?? b.barrel.row - 1
                 b.barrel.nextRowSnapshot = null
                 b.barrel.isFalling = false
-                b.barrel.vx = b.barrel.row % 2 === 0 ? -1.25 : 1.25
+                b.barrel.vx = b.barrel.row % 2 === 0 ? -1.5 : 1.5
             }
         } else {
             b.sprite.position.x += b.barrel.vx
@@ -77,7 +76,7 @@ const LADDER_DESCENT_CHANCE = 0.1
 export const checkBarrelLadderDescent = (b: BarrelSprite) => {
     if (b.barrel!.isFalling) return
 
-    for (const ladder of ladders) {
+    for (const ladder of barrelLadders) {
         const xDiff = Math.abs(b.sprite.position.x - ladder.x)
         if (xDiff > 2) continue
 

@@ -160,3 +160,27 @@ export const ladders: {x: number, yb: number, yt: number}[] = [
         yt: 59
     },
 ]
+
+export const barrelLadders: {x: number, yb: number, yt: number}[] = [
+    ...ladders,
+    {
+        x: 84,
+        yb: 247,
+        yt: 216
+    },
+    {
+        x: 68,
+        yb: 183,
+        yt: 149
+    },
+    {
+        x: 172,
+        yb: 151,
+        yt: 115
+    },
+    {
+        x: 92,
+        yb: 116,
+        yt: 87
+    },    
+]

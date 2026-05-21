@@ -11,7 +11,6 @@ import { FIREBALL_IDLE } from "./Animations/FlameAnimations"
 import { ladders, rows } from "./levels/level1"
 import { barrels, emptyBarrels, spawnBarrel, updateBarrels } from "./Barrel"
 import { flame, spawnFlame, resetFlame, updateFlame } from "./Flame"
-// import { GameLoop } from "./GameLoop"
 import { THROW_BARREL } from "./Animations/KongAnimations"
 import { ctx, renderTarget, scene, texture, camera, updateScore } from "./utils"
 // import { GameLoop } from "./GameLoop"
@@ -155,18 +154,18 @@ const draw = () => {
     //     ctx?.stroke()
     // }
 
-    // for(let i = 0; i < ladders.length; i++){
+    // for(let i = 0; i < barrelLadders.length; i++){
     //         ctx!.strokeStyle = "limegreen";
     //         ctx!.lineWidth = 2;
 
     //         ctx?.beginPath();
-    //         ctx?.moveTo(ladders[i].x - 1, ladders[i].yb);
-    //         ctx?.lineTo(ladders[i].x + 1, ladders[i].yb);
+    //         ctx?.moveTo(barrelLadders[i].x - 1, barrelLadders[i].yb);
+    //         ctx?.lineTo(barrelLadders[i].x + 1, barrelLadders[i].yb);
     //         ctx?.stroke()
 
     //         ctx?.beginPath();
-    //         ctx?.moveTo(ladders[i].x - 1, ladders[i].yt);
-    //         ctx?.lineTo(ladders[i].x + 1, ladders[i].yt);
+    //         ctx?.moveTo(barrelLadders[i].x - 1, barrelLadders[i].yt);
+    //         ctx?.lineTo(barrelLadders[i].x + 1, barrelLadders[i].yt);
     //         ctx?.stroke()
     // }
 
