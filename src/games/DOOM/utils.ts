@@ -79,20 +79,17 @@ export const keyMap: { [key: string]: number } = {
   '5': '5'.charCodeAt(0),
 };
 
-const pointerFn = () => {
+export function requestPointerLock() {
   renderer.domElement.requestPointerLock();
 }
 
-export function releasePointerLock(canvas: HTMLCanvasElement) {
-  canvas.removeEventListener('click', pointerFn);
+export function releasePointerLock(_canvas: HTMLCanvasElement) {
   if (document.pointerLockElement) {
     document.exitPointerLock();
   }
 }
 
 export function setupMouseInput(canvas: HTMLCanvasElement, Module: any) {
-  // Request pointer lock for FPS controls
-  canvas.addEventListener('click', pointerFn);
 
   // Mouse movement (when pointer is locked)
   document.addEventListener('mousemove', (e) => {

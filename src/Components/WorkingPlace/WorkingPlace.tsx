@@ -1,4 +1,4 @@
-import { FC, useEffect, useLayoutEffect, useRef } from "react";
+import { FC, useEffect, useLayoutEffect, useRef, useState } from "react";
 import * as THREE from "three"
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import lottie from 'lottie-web';
@@ -13,7 +13,7 @@ import s from './WorkingPlace.module.scss'
 import { SpaceRabbitModule } from "../../games/SpaceRabbit/utils";
 import { CrossTheRoadModule } from '../../games/CrossTheRoad/utils'
 import { destroyDoom, DoomModule, startDoom } from '../../games/DOOM/doom1.ts'
-import { releasePointerLock } from '../../games/DOOM/utils'
+import { releasePointerLock, requestPointerLock } from '../../games/DOOM/utils'
 import { GamesType } from "../../types/games";
 import { resolveCanvasGameKeyDown, resolveCanvasGameKeyUp, resolveCrossTheRoadKeys, resolveDoomKeysDown, resolveDoomKeysUp, resolveRabbitKeys } from "../../utils/Functions/resolveGameAction";
 import { resolveInitTarget } from "../../utils/Functions/resolveInitTarget.ts";
@@ -30,12 +30,26 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
 
     const gameRef = useRef(game);
     const screenRef = useRef<THREE.Mesh>()
+    const [showDoomHint, setShowDoomHint] = useState(false)
+    const [doomHintExiting, setDoomHintExiting] = useState(false)
+    const doomHintExitTimer = useRef<number>()
+
+    const dismissDoomHint = () => {
+        clearTimeout(doomHintExitTimer.current)
+        setDoomHintExiting(true)
+        doomHintExitTimer.current = setTimeout(() => {
+            setShowDoomHint(false)
+            setDoomHintExiting(false)
+        }, 280)
+    }
 
     useEffect(() => {
         gameRef.current = game;
-        if (game !== 'doom') { 
+        if (game !== 'doom') {
             releasePointerLock(renderer.domElement);
             destroyDoom();
+            setShowDoomHint(false)
+            setDoomHintExiting(false)
         }
     }, [game]);
 
@@ -341,6 +355,11 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                     rectLight.intensity += 1
                 }
 
+                if(intersect.name === 'screen' && gameRef.current === 'doom') {
+                    requestPointerLock()
+                    dismissDoomHint()
+                }
+
                 if(intersect.name.includes("Cartridge")){
 
                     // isGameOn = false
@@ -385,16 +404,11 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
 
                         }else if(intersect.parent!.name === 'doom'){
 
-                            // renderer.domElement.requestPointerLock({
-                            //     unadjustedMovement: true
-                            // })
-                            
-                            // isGameOn = true
-                            
                             const texture = DoomModule.renderTarget.texture
                             texture.flipY = false;
 
                             setGame("doom")
+                            setShowDoomHint(true)
 
                             setTimeout(() => screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150)
                             rectLight.color = new THREE.Color(0xffffff)
@@ -402,26 +416,24 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                             startDoom('doom1.wad')
                         }
                         else if(intersect.parent!.name === 'freedoom1'){
-                            
-                            // isGameOn = true
-                            
+
                             const texture = DoomModule.renderTarget.texture
                             texture.flipY = false;
 
                             setGame("doom")
+                            setShowDoomHint(true)
 
                             setTimeout(() => screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150)
                             rectLight.color = new THREE.Color(0xffffff)
 
                             startDoom('freedoom1.wad')
                         }else if(intersect.parent!.name === 'freedoom2'){
-                            
-                            // isGameOn = true
-                            
+
                             const texture = DoomModule.renderTarget.texture
                             texture.flipY = false;
 
                             setGame("doom")
+                            setShowDoomHint(true)
 
                             setTimeout(() => screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150)
                             rectLight.color = new THREE.Color(0xffffff)
@@ -527,14 +539,13 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                 LOADING...
                 <progress id='loading-screen-progress' className={s.loading_screen_progress} value={0} max={100}></progress>
             </div>
-            {/* <div className={s.controls}>
-                <h2>Controls</h2>
-                <p>ctrl + wheel to zoom</p>
-                <p>ctrl + LMB to move</p>
-                <p>LMB to rotate</p>
-            </div> */}
             <div id="lottie1" className={s.lottie}></div>
             <div id="lottie2" className={s.lottie}></div>
+            {showDoomHint && (
+                <div className={`${s.toast} ${doomHintExiting ? s.exiting : ''}`}>
+                    Click the TV screen to enable mouse controls
+                </div>
+            )}
         </div>
     )
 }
