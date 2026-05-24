@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-const games = ['rabbit', 'crosstheroad', 'doom', 'donkeykong', 'sleep'] as const
+const games = ['digdug', 'crosstheroad', 'doom', 'donkeykong', 'sleep'] as const
 
 export type GamesType = typeof games[number]
 

@@ -1,8 +1,8 @@
 import { useState } from "react"
 import CrossTheRoad from "../../games/CrossTheRoad/CrossTheRoad"
-import SpaceRabbit from "../../games/SpaceRabbit/SpaceRabbit"
 import WorkingPlace from "../WorkingPlace/WorkingPlace"
 import { GamesType } from "../../types/games"
+import Overlay from "../Overlay/Overlay"
 
 const App = () => {
 
@@ -10,8 +10,8 @@ const App = () => {
 
     return(
         <>
+            <Overlay />
             <WorkingPlace game={currentGame} setGame={setCurrentGame} />
-            {currentGame === 'rabbit' && <SpaceRabbit />}
             {currentGame === 'crosstheroad' && <CrossTheRoad />}
         </>
     )

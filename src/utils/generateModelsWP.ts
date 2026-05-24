@@ -17,7 +17,7 @@ const generateModelsWP = (modelsList: String[]): Promise<THREE.Group> => {
     const loader = new GLTFLoader(loadingManager);
 
     const geometryGroup = new THREE.Group();
-    const images = ['unknown', 'crosstheroad', 'rabbitGame', 'freedoom2', 'freedoom1', 'doom'];
+    const images = ['unknown', 'digdug', 'crosstheroad', 'freedoom2', 'freedoom1', 'doom'];
 
     loadingManager.onProgress = (_url, loaded, total) => {
       const loadingProgress = document.getElementById('loading-screen-progress') as HTMLProgressElement;

@@ -10,12 +10,11 @@ import {gamepadButtonAnimation, joystickButtonAnimation} from "../../utils/Anima
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import s from './WorkingPlace.module.scss'
-import { SpaceRabbitModule } from "../../games/SpaceRabbit/utils";
 import { CrossTheRoadModule } from '../../games/CrossTheRoad/utils'
 import { destroyDoom, DoomModule, startDoom } from '../../games/DOOM/doom1.ts'
 import { releasePointerLock, requestPointerLock } from '../../games/DOOM/utils'
 import { GamesType } from "../../types/games";
-import { resolveCanvasGameKeyDown, resolveCanvasGameKeyUp, resolveCrossTheRoadKeys, resolveDoomKeysDown, resolveDoomKeysUp, resolveRabbitKeys } from "../../utils/Functions/resolveGameAction";
+import { resolveCanvasGameKeyDown, resolveCanvasGameKeyUp, resolveCrossTheRoadKeys, resolveDoomKeysDown, resolveDoomKeysUp } from "../../utils/Functions/resolveGameAction";
 import { resolveInitTarget } from "../../utils/Functions/resolveInitTarget.ts";
 import { scene } from '../../utils/scene.ts'
 import { renderer } from '../../utils/renderer.ts'
@@ -30,26 +29,17 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
 
     const gameRef = useRef(game);
     const screenRef = useRef<THREE.Mesh>()
-    const [showDoomHint, setShowDoomHint] = useState(false)
-    const [doomHintExiting, setDoomHintExiting] = useState(false)
-    const doomHintExitTimer = useRef<number>()
-
-    const dismissDoomHint = () => {
-        clearTimeout(doomHintExitTimer.current)
-        setDoomHintExiting(true)
-        doomHintExitTimer.current = setTimeout(() => {
-            setShowDoomHint(false)
-            setDoomHintExiting(false)
-        }, 280)
-    }
+    const [hint, setHint] = useState('')
 
     useEffect(() => {
         gameRef.current = game;
         if (game !== 'doom') {
             releasePointerLock(renderer.domElement);
             destroyDoom();
-            setShowDoomHint(false)
-            setDoomHintExiting(false)
+        }
+
+        if(game !== 'digdug' && game !== 'doom'){
+            setHint('')
         }
     }, [game]);
 
@@ -65,7 +55,7 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
 
     const controls = new OrbitControls(camera, renderer.domElement)
         controls.enableDamping = true;
-        controls.enableZoom = false;
+        controls.enableZoom = true;
         // controls.enableRotate = false
         // controls.enablePan = false
         // controls.enableDamping = false
@@ -83,10 +73,6 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
 
     const resolveGameAction = (key: string) => {
         switch(gameRef.current){
-            case "rabbit": {
-                resolveRabbitKeys(key)
-                break;
-            }
             case "crosstheroad": {
                 resolveCrossTheRoadKeys(key)
                 break;
@@ -103,12 +89,24 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
     }
 
     useEffect(() => {
+        let crossRepeatInterval: ReturnType<typeof setInterval> | null = null
+
         const handleKeyDown = (e: KeyboardEvent) => {
-            // e.preventDefault()
+            if (gameRef.current === "crosstheroad") {
+                if (e.repeat) return
+                if (crossRepeatInterval) clearInterval(crossRepeatInterval)
+                resolveCrossTheRoadKeys(e.key)
+                crossRepeatInterval = setInterval(() => resolveCrossTheRoadKeys(e.key), 100)
+                return
+            }
             resolveGameAction(e.key)
         }
 
         const handleKeyUp = (e: KeyboardEvent) => {
+            if (gameRef.current === "crosstheroad") {
+                if (crossRepeatInterval) { clearInterval(crossRepeatInterval); crossRepeatInterval = null }
+                return
+            }
 
             switch(gameRef.current){
                 case "donkeykong": {
@@ -316,11 +314,18 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                 if(intersect.name === 'on'){
                     video1.play()
                     gamepadButtonAnimation(intersect as THREE.Mesh)
+                    const onMat = new THREE.MeshBasicMaterial({ map: glitchTextureRef.current, color: new THREE.Color(0, 0, 0) })
+                    screenRef.current!.material = onMat
+                    gsap.to(onMat.color, { r: 1, g: 1, b: 1, duration: 0.4, ease: 'power2.out' })
+                    gsap.to(rectLight.color, { r: 1, g: 1, b: 1, duration: 0.4 })
                 }
 
                 if(intersect.name === 'off'){
                     video1.pause()
+                    setGame('sleep')
                     gamepadButtonAnimation(intersect as THREE.Mesh)
+                    gsap.to((screenRef.current!.material as THREE.MeshBasicMaterial).color, { r: 0, g: 0, b: 0, duration: 0.4, ease: 'power2.out' })
+                    gsap.to(rectLight.color, { r: 0x16 / 255, g: 0x16 / 255, b: 0x16 / 255, duration: 0.4, ease: 'power2.out' })
                 }
 
                 if(intersect.name === 'sleep1'){
@@ -357,7 +362,7 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
 
                 if(intersect.name === 'screen' && gameRef.current === 'doom') {
                     requestPointerLock()
-                    dismissDoomHint()
+                    setHint('')
                 }
 
                 if(intersect.name.includes("Cartridge")){
@@ -390,25 +395,18 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                             setTimeout(() => screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture }), 1150)
                             rectLight.color = new THREE.Color(0xffffff)
                         
-                        }else if(intersect.parent!.name === 'rabbitGame'){
-                            
-                            // isGameOn = true
-                            
-                            const texture = SpaceRabbitModule.renderTarget.texture
-                            texture.flipY = false;
-
-                            setGame("rabbit")
-
-                            setTimeout(() => screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150)
-                            rectLight.color = new THREE.Color(0xffffff)
-
-                        }else if(intersect.parent!.name === 'doom'){
+                        }
+                        else if(intersect.parent!.name === 'digdug'){
+                            setGame("digdug")
+                            setHint('"Dig Dug" is in development and is not yet available')
+                        }
+                        else if(intersect.parent!.name === 'doom'){
 
                             const texture = DoomModule.renderTarget.texture
                             texture.flipY = false;
 
                             setGame("doom")
-                            setShowDoomHint(true)
+                            setHint('Click the TV screen to enable mouse controls')
 
                             setTimeout(() => screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150)
                             rectLight.color = new THREE.Color(0xffffff)
@@ -421,7 +419,7 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                             texture.flipY = false;
 
                             setGame("doom")
-                            setShowDoomHint(true)
+                            setHint('Click the TV screen to enable mouse controls')
 
                             setTimeout(() => screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150)
                             rectLight.color = new THREE.Color(0xffffff)
@@ -433,7 +431,7 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                             texture.flipY = false;
 
                             setGame("doom")
-                            setShowDoomHint(true)
+                            setHint('Click the TV screen to enable mouse controls')
 
                             setTimeout(() => screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150)
                             rectLight.color = new THREE.Color(0xffffff)
@@ -497,11 +495,11 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
 
         const getSceneData = (): [THREE.WebGLRenderTarget, THREE.Scene, THREE.Camera, ((delta: number) => any) | undefined] => {
             switch (gameRef.current) {
-                case 'rabbit': return [SpaceRabbitModule.renderTarget, SpaceRabbitModule.scene, SpaceRabbitModule.camera, SpaceRabbitModule.update];
+                // case 'rabbit': return [SpaceRabbitModule.renderTarget, SpaceRabbitModule.scene, SpaceRabbitModule.camera, SpaceRabbitModule.update];
                 case 'crosstheroad': return [CrossTheRoadModule.renderTarget, CrossTheRoadModule.scene, CrossTheRoadModule.camera, CrossTheRoadModule.update];
                 case 'doom': return [DoomModule.renderTarget, DoomModule.scene, DoomModule.camera, DoomModule.update];
                 case 'donkeykong': return [DonkeyKongModule.renderTarget, DonkeyKongModule.scene, DonkeyKongModule.camera, DonkeyKongModule.update];
-                default: return [SpaceRabbitModule.renderTarget, SpaceRabbitModule.scene, SpaceRabbitModule.camera, SpaceRabbitModule.update];
+                default: return [DonkeyKongModule.renderTarget, DonkeyKongModule.scene, DonkeyKongModule.camera, DonkeyKongModule.update];
             }
         };
 
@@ -512,21 +510,22 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
         const animate = () => {
             if (!animationRef.current) return;
 
-            const delta = clock.getDelta();
-
-            const [target, sceneToRender, cameraToRender, update] = getSceneData()
-
-            update?.(delta)
-
-            renderer.setRenderTarget(target);
-            renderer.render(sceneToRender, cameraToRender);
-            renderer.setRenderTarget(null);
-            renderer.render(scene, camera);
-
             if(gameRef.current === 'sleep'){
                 if(lottieTextureRef1.current) lottieTextureRef1.current.needsUpdate = true;
                 if(lottieTextureRef.current) lottieTextureRef.current.needsUpdate = true;
+            }else{
+                const delta = clock.getDelta();
+
+                const [target, sceneToRender, cameraToRender, update] = getSceneData()
+
+                update?.(delta)
+
+                renderer.setRenderTarget(target);
+                renderer.render(sceneToRender, cameraToRender);
+                renderer.setRenderTarget(null);
             }
+
+            renderer.render(scene, camera);
 
             animationRef.current = requestAnimationFrame(animate);
           };
@@ -541,9 +540,9 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
             </div>
             <div id="lottie1" className={s.lottie}></div>
             <div id="lottie2" className={s.lottie}></div>
-            {showDoomHint && (
-                <div className={`${s.toast} ${doomHintExiting ? s.exiting : ''}`}>
-                    Click the TV screen to enable mouse controls
+            {hint && (
+                <div className={s.toast}>
+                    {hint}
                 </div>
             )}
         </div>

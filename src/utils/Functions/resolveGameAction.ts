@@ -1,37 +1,7 @@
-import { rabbitDownButtonClicked, rabbitLeftButtonClicked, rabbitRightButtonClicked, rabbitUpButtonClicked } from "../../games/SpaceRabbit/utils";
 import { crossLeftButtonClicked, crossUpButtonClicked, crossDownButtonClicked, crossRightButtonClicked } from "../../games/CrossTheRoad/Components/Character";
 import { keyMap } from "../../games/DOOM/utils";
 import { getModule } from "../../games/DOOM/doom1";
 import { DOWN, input, JUMP, LEFT, RIGHT, UP } from "../../games/DonkeyKong/Input";
-
-export const resolveRabbitKeys = (key: string) => {
-    switch(key){
-        case "w": 
-        case "W":
-        case "ArrowUp": {
-            rabbitUpButtonClicked()
-            break;
-        }
-        case "s": 
-        case "S": 
-        case "ArrowDown": {
-            rabbitDownButtonClicked()
-            break;
-        }
-        case "a": 
-        case "A": 
-        case "ArrowLeft": {
-            rabbitLeftButtonClicked()
-            break;
-        }
-        case "d":
-        case "D": 
-        case "ArrowRight": {
-            rabbitRightButtonClicked()
-            break;
-        }
-    }
-}
 
 export const resolveCrossTheRoadKeys = (key: string) => {
     switch(key){

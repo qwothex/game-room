@@ -12,9 +12,9 @@ class Resources {
 
     constructor() {
         this.toLoad = {
-            background: "/sprites/bg1.png",
+            background: "/sprites/bg.png",
             mario: "/sprites/mario.png",
-            barrel: "/sprites/barrel2.png",
+            barrel: "/sprites/barrel.png",
             hammer: '/sprites/hammer.png',
             kong: '/sprites/kong.png',
             fireball: '/sprites/fireball.png'
