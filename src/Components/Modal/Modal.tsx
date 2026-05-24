@@ -1,11 +1,5 @@
-import { FC, ReactNode, useState } from 'react'
+import { useState } from 'react'
 import './Modal.css'
-
-type ModalProps = {
-    title: string
-    onClose: () => void
-    children: ReactNode
-}
 
 const Modal = () => {
 

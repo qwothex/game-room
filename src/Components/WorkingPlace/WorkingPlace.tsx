@@ -173,29 +173,6 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
 
         init()
 
-        let timeoutId: any;
-
-        ScrollTrigger.create({
-            trigger: renderer.domElement,
-            start: "top center",
-            end: "bottom center",
-            onUpdate: _self => {
-                clearTimeout(timeoutId);
-
-                timeoutId = setTimeout(() => {
-                    const rect = renderer.domElement.getBoundingClientRect();
-
-                    if (rect.top < window.innerHeight / 2 && rect.top > -rect.height / 2) {
-                        gsap.to(window, {
-                            scrollTo: renderer.domElement,
-                            duration: 0.5,
-                            ease: "power2.out"
-                        });
-                    }
-                }, 750);
-            }
-        });
-
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.2)
         directionalLight.position.set(0, -1, 2);
         scene.add(directionalLight)
@@ -312,7 +289,7 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                 const intersect = intersects[0].object
 
                 if(intersect.name === 'on'){
-                    video1.play()
+                    video1.pause()
                     gamepadButtonAnimation(intersect as THREE.Mesh)
                     const onMat = new THREE.MeshBasicMaterial({ map: glitchTextureRef.current, color: new THREE.Color(0, 0, 0) })
                     screenRef.current!.material = onMat
