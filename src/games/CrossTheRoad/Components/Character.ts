@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { Direction } from "../../../types/CTRGameTypes";
 import gsap from "gsap";
 import { maxTileIndex, minTileIndex, tileSize } from "../../../constants/CTR";
@@ -8,6 +9,7 @@ import { SLight } from "./ShadowLight";
 import { initializeGame, updateScore } from "../utils";
 
 let animPlaying = false
+let chickenModel: THREE.Object3D | null = null
 
 export function cancelCharacterTweens() {
   gsap.killTweensOf(character.character.position)
@@ -31,29 +33,26 @@ function Character() {
   const characterMesh = new THREE.Group();
   characterRoot.add(characterMesh)
 
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(15, 15, 20),
-    new THREE.MeshLambertMaterial({
-      color: "white",
-      flatShading: true,
-    })
-  );
-  body.position.z = 10;
-  body.castShadow = true;
-  body.receiveShadow = true;
-  characterMesh.add(body);
-
-  const cap = new THREE.Mesh(
-    new THREE.BoxGeometry(2, 4, 2),
-    new THREE.MeshLambertMaterial({
-      color: 0xf0619a,
-      flatShading: true,
-    })
-  );
-  cap.position.z = 21;
-  cap.castShadow = true;
-  cap.receiveShadow = true;
-  characterMesh.add(cap);
+  const loader = new GLTFLoader();
+  loader.load('models/Chicken/Chicken.gltf', (gltf) => {
+    const model = gltf.scene;
+    const box = new THREE.Box3().setFromObject(model);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const scale = 30 / Math.max(size.x, size.y, size.z);
+    model.scale.setScalar(scale);
+    model.rotation.x = Math.PI / 2;
+    model.rotation.y = Math.PI;
+    model.position.z = 15.1;
+    model.traverse(child => {
+      if ((child as THREE.Mesh).isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+    chickenModel = model;
+    characterMesh.add(model);
+  });
 
   const target = new THREE.Object3D();
   target.position.set(0, 0, 0);
@@ -64,7 +63,7 @@ function Character() {
   characterRoot.add(camera);
   characterRoot.add(SLight);
   characterRoot.add(SLight.target);
-    
+
   return {character: characterRoot, isDead: false, farest: 0}
 }
 
@@ -84,6 +83,15 @@ export function step(direction: Direction) {
       animPlaying = true
 
     if (position.currentRow > metadata.length - 10) addRows();
+
+    const directionAngles = { forward: Math.PI, backward: 0, left: -Math.PI / 2, right: Math.PI / 2 }
+    if (chickenModel) {
+      const target = directionAngles[direction]
+      let delta = (target - chickenModel.rotation.y) % (2 * Math.PI)
+      if (delta > Math.PI) delta -= 2 * Math.PI
+      if (delta < -Math.PI) delta += 2 * Math.PI
+      gsap.to(chickenModel.rotation, { y: chickenModel.rotation.y + delta, duration: 0.1, ease: 'none' })
+    }
 
     if (direction === "forward") {
 
@@ -196,6 +204,7 @@ export const initializePlayer = () => {
   character.character.position.y = 0;
   character.character.children[0].position.z = 0;
   character.character.children[0].rotation.y = 0;
+  if (chickenModel) chickenModel.rotation.y = Math.PI;
 
   character.isDead = false
 

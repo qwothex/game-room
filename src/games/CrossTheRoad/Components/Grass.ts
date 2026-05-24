@@ -18,7 +18,7 @@ export const Grass = (rowIndex: number) => {
   grass.position.y = rowIndex * tileSize;
 
   const foundation = new THREE.Mesh(
-    new THREE.BoxGeometry(tilesPerRow * tileSize, tileSize, 0),
+    new THREE.PlaneGeometry(tilesPerRow * tileSize, tileSize),
     new THREE.MeshLambertMaterial({
       map: getGrassTexture(),
     })

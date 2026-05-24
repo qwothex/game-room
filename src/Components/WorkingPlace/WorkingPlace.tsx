@@ -9,7 +9,7 @@ import { modelsList } from "../../../public/variables/roomModels";
 import {gamepadButtonAnimation, joystickButtonAnimation} from "../../utils/Animations/gamepadButtonAnimation";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollToPlugin } from "gsap/ScrollToPlugin";
-import s from './WorkingPlace.module.scss'
+import './WorkingPlace.css'
 import { CrossTheRoadModule } from '../../games/CrossTheRoad/utils'
 import { destroyDoom, DoomModule, startDoom } from '../../games/DOOM/doom1.ts'
 import { releasePointerLock, requestPointerLock } from '../../games/DOOM/utils'
@@ -533,15 +533,15 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
     }, [])
 
     return(
-        <div ref={container} id="three-canvas" className={s.container}>
-            <div id='loading-screen' className={s.loading_screen}>
+        <div ref={container} id="three-canvas" className="container">
+            <div id='loading-screen' className="loading_screen">
                 LOADING...
-                <progress id='loading-screen-progress' className={s.loading_screen_progress} value={0} max={100}></progress>
+                <progress id='loading-screen-progress' className="loading_screen_progress" value={0} max={100}></progress>
             </div>
-            <div id="lottie1" className={s.lottie}></div>
-            <div id="lottie2" className={s.lottie}></div>
+            <div id="lottie1" className="lottie"></div>
+            <div id="lottie2" className="lottie"></div>
             {hint && (
-                <div className={s.toast}>
+                <div className="toast">
                     {hint}
                 </div>
             )}
