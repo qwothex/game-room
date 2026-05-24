@@ -126,9 +126,6 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
 
         document.addEventListener('keydown', handleKeyDown)
         document.addEventListener('keyup', handleKeyUp)
-
-        window.addEventListener("wheel", () => gsap.killTweensOf(window), { passive: true });
-        window.addEventListener("touchmove", () => gsap.killTweensOf(window), { passive: true });
     }, [])
 
     useLayoutEffect(() => {
@@ -145,6 +142,12 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
             const carpet = models.getObjectByName('Plane') as THREE.Mesh;
             carpet.scale.set(5,1,3)
             carpet.position.set(0,0,4)
+            carpet.traverse(child => {
+                if ((child as THREE.Mesh).isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+                }
+            });
 
             const gamepad = models.getObjectByName('Gamepad') as THREE.Mesh;
             gamepad.position.set(1, 0, 2)
@@ -152,6 +155,12 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
             const consoleMesh = models.getObjectByName('Console') as THREE.Mesh;
             consoleMesh.rotation.set(0, 0.8, 0);
             consoleMesh.position.set(-1.5, 0.03, 2);
+            consoleMesh.traverse(child => {
+                if ((child as THREE.Mesh).isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+                }
+            });
 
             const cartridgeGroup = models.getObjectByName('CartridgesGroup') as THREE.Mesh;
             cartridgeGroup.rotation.set(0, 1, 0);
@@ -301,7 +310,13 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                     video1.pause()
                     setGame('sleep')
                     gamepadButtonAnimation(intersect as THREE.Mesh)
-                    gsap.to((screenRef.current!.material as THREE.MeshBasicMaterial).color, { r: 0, g: 0, b: 0, duration: 0.4, ease: 'power2.out' })
+                    gsap.to((screenRef.current!.material as THREE.MeshBasicMaterial).color, {
+                        r: 0, 
+                        g: 0, 
+                        b: 0, 
+                        duration: 0.4, 
+                        ease: 'power2.out' 
+                    })
                     gsap.to(rectLight.color, { r: 0x16 / 255, g: 0x16 / 255, b: 0x16 / 255, duration: 0.4, ease: 'power2.out' })
                 }
 
