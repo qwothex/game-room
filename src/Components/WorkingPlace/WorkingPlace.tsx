@@ -1,14 +1,11 @@
-import { FC, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { FC, useEffect, useLayoutEffect, useRef } from "react";
 import * as THREE from "three"
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import lottie from 'lottie-web';
-import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js';
 import gsap from 'gsap'
 import generateModelsWP from "../../utils/generateModelsWP";
 import { modelsList } from "../../../public/variables/roomModels";
 import {gamepadButtonAnimation, joystickButtonAnimation} from "../../utils/Animations/gamepadButtonAnimation";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import './WorkingPlace.css'
 import { CrossTheRoadModule } from '../../games/CrossTheRoad/utils'
 import { destroyDoom, DoomModule, startDoom } from '../../games/DOOM/doom1.ts'
@@ -20,26 +17,28 @@ import { scene } from '../../utils/scene.ts'
 import { renderer } from '../../utils/renderer.ts'
 import { camera } from '../../utils/camera.ts'
 import { DonkeyKongModule, resetMario } from "../../games/DonkeyKong/donkeyKong.ts";
-RectAreaLightUniformsLib.init();
+import { createLabel, removeLabel } from '../../utils/createLabel'
+import { addClickableEffect, removeClickableEffect } from '../../utils/clickableEffect'
 
-gsap.registerPlugin(ScrollTrigger)
-gsap.registerPlugin(ScrollToPlugin);
+const zoomLabel = createLabel({ text: 'Zoom in/out' })
+const doomLabel = createLabel({ text: 'Click on the screen to lock pointer', width: 450 })
+const digLabel = createLabel({ text: '"Dig Dug" is in development and is not yet available', width: 650 })
 
 const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = ({game, setGame}) => {
 
     const gameRef = useRef(game);
     const screenRef = useRef<THREE.Mesh>()
-    const [hint, setHint] = useState('')
 
     useEffect(() => {
         gameRef.current = game;
         if (game !== 'doom') {
+            removeLabel(doomLabel)
             releasePointerLock(renderer.domElement);
             destroyDoom();
         }
 
-        if(game !== 'digdug' && game !== 'doom'){
-            setHint('')
+        if(game !== 'digdug'){
+            removeLabel(digLabel)
         }
     }, [game]);
 
@@ -53,23 +52,27 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
     const glitchTextureRef = useRef<THREE.Texture>()
     const legendaryTextureRef = useRef<THREE.Texture>()
 
-    const controls = new OrbitControls(camera, renderer.domElement)
+    const controlsRef = useRef<OrbitControls | null>(null)
+    if (!controlsRef.current) {
+        const controls = new OrbitControls(camera, renderer.domElement)
         controls.enableDamping = true;
-        controls.enableZoom = true;
-        // controls.enableRotate = false
-        // controls.enablePan = false
-        // controls.enableDamping = false
+        controls.enableZoom = false;
+        controls.enablePan = false;
         controls.target.set(-1, 0.35, 0);
         controls.update();
 
-        controls.minPolarAngle = Math.PI / 4;  // 45°
-        controls.maxPolarAngle = Math.PI / 2.05;   // 90°
+        controls.minPolarAngle = Math.PI / 3;
+        controls.maxPolarAngle = Math.PI / 2.05;
 
-        controls.minAzimuthAngle = -Math.PI / 2; // left
-        controls.maxAzimuthAngle = Math.PI / 2;  // right
+        controls.minAzimuthAngle = -Math.PI / 6; // left
+        controls.maxAzimuthAngle = Math.PI / 5; // right
 
         controls.minDistance = 3;
         controls.maxDistance = 5;
+
+        controlsRef.current = controls
+    }
+    const controls = controlsRef.current!
 
     const resolveGameAction = (key: string) => {
         switch(gameRef.current){
@@ -143,53 +146,115 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
             carpet.scale.set(5,1,3)
             carpet.position.set(0,0,4)
             carpet.traverse(child => {
-                if ((child as THREE.Mesh).isMesh) {
-                child.castShadow = true;
-                child.receiveShadow = true;
-                }
-            });
+                if ((child as THREE.Mesh).isMesh) child.receiveShadow = true
+            })
 
             const gamepad = models.getObjectByName('Gamepad') as THREE.Mesh;
             gamepad.position.set(1, 0, 2)
+            gamepad.traverse(child => {
+                if ((child as THREE.Mesh).isMesh) child.castShadow = true
+            })
 
             const consoleMesh = models.getObjectByName('Console') as THREE.Mesh;
             consoleMesh.rotation.set(0, 0.8, 0);
-            consoleMesh.position.set(-1.5, 0.03, 2);
+            consoleMesh.position.set(-1.5, 0.01, 2);
             consoleMesh.traverse(child => {
                 if ((child as THREE.Mesh).isMesh) {
-                child.castShadow = true;
-                child.receiveShadow = true;
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                    // ((child as THREE.Mesh).material as THREE.MeshBasicMaterial).wireframe = true;
                 }
-            });
+            })
 
             const cartridgeGroup = models.getObjectByName('CartridgesGroup') as THREE.Mesh;
             cartridgeGroup.rotation.set(0, 1, 0);
             cartridgeGroup.position.set(-2.515, 1.09, 2.775);
+            cartridgeGroup.traverse(child => {
+                if ((child as THREE.Mesh).isMesh) {
+                    child.castShadow = true
+                    child.receiveShadow = true
+                }
+            })
 
             const stand = models.getObjectByName('Stand') as THREE.Mesh
             stand.scale.set(0.25, 0.3, 0.3)
             stand.rotation.set(0, 1, 0);
             stand.position.set(-2.2, 0.45, 2.97);
+            stand.traverse(child => {
+                if ((child as THREE.Mesh).isMesh) {
+                    child.castShadow = true
+                    child.receiveShadow = true
+                }
+            })
 
             screenRef.current = models.getObjectByName('screen') as THREE.Mesh
+
+            const tvModel = models.getObjectByName('TV') as THREE.Mesh
+            tvModel.traverse(child => {
+                child.castShadow = false;
+                child.receiveShadow = false;
+                child.layers.set(1)
+            })
+            camera.layers.enable(1)
 
             const initCartridge = models.getObjectByName('donkeykong') as THREE.Mesh
             activeCartridgeRef.current = initCartridge
             scene.attach(initCartridge)
 
             scene.add(models)
+
+            const toggler = models.getObjectByName('toggler')
+            if (toggler) {
+                addClickableEffect(toggler)
+                const wp = new THREE.Vector3()
+                toggler.getWorldPosition(wp)
+                zoomLabel.position.set(wp.x + 0.40, wp.y + 0.15, wp.z)
+                scene.add(zoomLabel)
+            }
         }
 
         init()
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.2)
-        directionalLight.position.set(0, -1, 2);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.1)
+        directionalLight.castShadow = false
+        directionalLight.position.set(0, 2, 3);
+        directionalLight.target.position.set(0, 2, 2);
+        directionalLight.layers.set(1)
         scene.add(directionalLight)
+        scene.add(directionalLight.target)
 
-        const rectLight = new THREE.RectAreaLight(0xffffff, 4, 2.5, 1.3)
-        rectLight.position.set(0, 1, 1.5)
-        rectLight.lookAt(0, 1, 2)
-        scene.add(rectLight)
+        // scene.add(new THREE.DirectionalLightHelper(directionalLight))
+
+        const spotLight = new THREE.SpotLight(0xffffff, 4)
+        spotLight.position.set(-0.25, 1, 1.2)
+        spotLight.target.position.set(-0.25, 1, 2)
+        spotLight.castShadow = true
+        spotLight.shadow.mapSize.set(4096, 4096)
+        spotLight.angle = Math.PI / 2.4
+        spotLight.shadow.camera.near = 0.1
+        spotLight.shadow.camera.far = 5
+        spotLight.shadow.normalBias = 0.003;
+        spotLight.shadow.bias = -0.0002;
+        scene.add(spotLight)
+        scene.add(spotLight.target)
+
+        // scene.add(new THREE.SpotLightHelper(spotLight))
+
+        // const rectLight = new THREE.RectAreaLight(0xffffff, 1, 2.5, 1.3) //4
+        // rectLight.position.set(0, 1, 1.5)
+        // rectLight.lookAt(0, 1, 2)
+        // scene.add(rectLight)
+
+        const controllerLight = new THREE.PointLight(0xffffff, 0)
+        controllerLight.position.set(1, 0.5, 2.5)
+        controllerLight.castShadow = true
+        controllerLight.shadow.mapSize.set(512, 512)
+        controllerLight.shadow.camera.near = 0.1
+        controllerLight.shadow.camera.far = 4
+        scene.add(controllerLight)
+
+        // scene.add(new THREE.PointLightHelper(controllerLight))
+        // scene.add(new THREE.CameraHelper(controllerLight.shadow.camera))
 
         const video = document.getElementById('glitch-video') as HTMLVideoElement;
         video.play()
@@ -282,6 +347,7 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
         }
 
         const raycaster = new THREE.Raycaster()
+        raycaster.layers.enableAll()
         const mouse = new THREE.Vector2()
 
         const clickFn = (event: MouseEvent) => {
@@ -298,18 +364,36 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                 const intersect = intersects[0].object
 
                 if(intersect.name === 'on'){
+                    setGame('sleep')
+                    spotLight.color = new THREE.Color(0xffffff)
                     video1.pause()
                     gamepadButtonAnimation(intersect as THREE.Mesh)
+                    removeClickableEffect(intersect)
                     const onMat = new THREE.MeshBasicMaterial({ map: glitchTextureRef.current, color: new THREE.Color(0, 0, 0) })
                     screenRef.current!.material = onMat
                     gsap.to(onMat.color, { r: 1, g: 1, b: 1, duration: 0.4, ease: 'power2.out' })
-                    gsap.to(rectLight.color, { r: 1, g: 1, b: 1, duration: 0.4 })
+                    gsap.to(directionalLight, {
+                        intensity: 0.1,
+                        duration: 0.1
+                    });
+                    gsap.to(spotLight, {
+                        intensity: 4,
+                        duration: 0.4
+                    });
+                    gsap.to(controllerLight, {
+                        intensity: 0,
+                        duration: 0.4
+                    });
                 }
+
+                if(gameRef.current === 'off') return
 
                 if(intersect.name === 'off'){
                     video1.pause()
-                    setGame('sleep')
+                    setGame('off')
                     gamepadButtonAnimation(intersect as THREE.Mesh)
+                    const j = scene.getObjectByName('Gamepad') as THREE.Group;
+                    addClickableEffect(j.getObjectByName('on')!)
                     gsap.to((screenRef.current!.material as THREE.MeshBasicMaterial).color, {
                         r: 0, 
                         g: 0, 
@@ -317,7 +401,18 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                         duration: 0.4, 
                         ease: 'power2.out' 
                     })
-                    gsap.to(rectLight.color, { r: 0x16 / 255, g: 0x16 / 255, b: 0x16 / 255, duration: 0.4, ease: 'power2.out' })
+                    gsap.to(spotLight, {
+                        intensity: 0,
+                        duration: 0.4
+                    });
+                    gsap.to(directionalLight, {
+                        intensity: 0.025,
+                        duration: 0.4
+                    });
+                    gsap.to(controllerLight, {
+                        intensity: 0.5,
+                        duration: 0.4
+                    });
                 }
 
                 if(intersect.name === 'sleep1'){
@@ -328,7 +423,7 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                     video1.pause()
                     gamepadButtonAnimation(intersect as THREE.Mesh)
                     screenRef.current!.material = new THREE.MeshBasicMaterial({ map: lottieTextureRef1.current });
-                    rectLight.color = new THREE.Color(0xffffff)
+                    spotLight.color = new THREE.Color(0xffffff)
                 }
 
                 if(intersect.name === 'sleep2'){
@@ -339,25 +434,53 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                     video1.pause()
                     gamepadButtonAnimation(intersect as THREE.Mesh)
                     screenRef.current!.material = new THREE.MeshBasicMaterial({ map: lottieTextureRef.current });
-                    rectLight.color = new THREE.Color(0xecc1ff)
+                    spotLight.color = new THREE.Color(0xecc1ff)
                 }
 
                 if(intersect.name === 'brightness1'){
                     gamepadButtonAnimation(intersect as THREE.Mesh)
-                    rectLight.intensity -= 1
+                    spotLight.intensity -= 1
                 }
 
                 if(intersect.name === 'brightness2'){
                     gamepadButtonAnimation(intersect as THREE.Mesh)
-                    rectLight.intensity += 1
+                    spotLight.intensity += 1
                 }
 
                 if(intersect.name === 'screen' && gameRef.current === 'doom') {
                     requestPointerLock()
-                    setHint('')
+                    removeLabel(doomLabel)
+                }
+
+                if(intersect.name === 'toggler') {
+                    removeLabel(zoomLabel)
+                    removeClickableEffect(intersect)
+                    if(controls.enableRotate){
+                        controls.enableRotate = false
+                        gsap.to(intersect.rotation, {
+                            y: intersect.rotation.y + (Math.PI / 2),
+                            duration: 0.6,
+                            ease: 'power2.out'
+                        })
+                        gsap.timeline()
+                            .to(camera.position, { x: 0, y: 1, z: 3, duration: 0.4, ease: 'power2.out' }, 0)
+                            .to(controls.target, { x: 0, y: 0.75, z: 0, duration: 0.4, ease: 'power2.out' }, 0)
+                    }else{
+                        controls.enableRotate = true
+                        gsap.to(intersect.rotation, {
+                            y: intersect.rotation.y + -(Math.PI / 2),
+                            duration: 0.6,
+                            ease: 'power2.out'
+                        })
+                        gsap.timeline()
+                            .to(camera.position, { x: 0.5, y: 1.25, z: 4.25, duration: 0.4, ease: 'power2.out' }, 0)
+                            .to(controls.target, { x: -1, y: 0.35, z: 0, duration: 0.4, ease: 'power2.out' }, 0)
+                    }
                 }
 
                 if(intersect.name.includes("Cartridge")){
+
+                    spotLight.color = new THREE.Color(0xffffff)
 
                     // isGameOn = false
                     video1.pause()
@@ -369,12 +492,12 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                         animPlaying = true
 
                         if(intersect.parent!.name === 'unknown'){
+                            setGame('sleep')
                             setTimeout(() => {
                                 screenRef.current!.material = new THREE.MeshBasicMaterial({ map: legendaryTextureRef.current })
                                 video1.muted = false
                                 video1.play()
                             }, 1150)
-                            rectLight.color = new THREE.Color(0xffffff)
                         }else if(intersect.parent!.name === 'crosstheroad'){
                             
                             // isGameOn = true
@@ -385,12 +508,14 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                             texture.flipY = false;
 
                             setTimeout(() => screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture }), 1150)
-                            rectLight.color = new THREE.Color(0xffffff)
                         
                         }
                         else if(intersect.parent!.name === 'digdug'){
                             setGame("digdug")
-                            setHint('"Dig Dug" is in development and is not yet available')
+                            const wp = new THREE.Vector3()
+                            screenRef.current?.getWorldPosition(wp)
+                            digLabel.position.set(wp.x + 0.40, wp.y + 1, wp.z + 1)
+                            scene.add(digLabel)
                         }
                         else if(intersect.parent!.name === 'doom'){
 
@@ -398,10 +523,12 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                             texture.flipY = false;
 
                             setGame("doom")
-                            setHint('Click the TV screen to enable mouse controls')
+                            const wp = new THREE.Vector3()
+                            screenRef.current?.getWorldPosition(wp)
+                            doomLabel.position.set(wp.x + 0.40, wp.y + 1, wp.z + 1)
+                            scene.add(doomLabel)
 
                             setTimeout(() => screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150)
-                            rectLight.color = new THREE.Color(0xffffff)
 
                             startDoom('doom1.wad')
                         }
@@ -411,10 +538,12 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                             texture.flipY = false;
 
                             setGame("doom")
-                            setHint('Click the TV screen to enable mouse controls')
+                            const wp = new THREE.Vector3()
+                            screenRef.current?.getWorldPosition(wp)
+                            doomLabel.position.set(wp.x + 0.40, wp.y + 0.15, wp.z)
+                            scene.add(doomLabel)
 
                             setTimeout(() => screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150)
-                            rectLight.color = new THREE.Color(0xffffff)
 
                             startDoom('freedoom1.wad')
                         }else if(intersect.parent!.name === 'freedoom2'){
@@ -423,10 +552,12 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                             texture.flipY = false;
 
                             setGame("doom")
-                            setHint('Click the TV screen to enable mouse controls')
+                            const wp = new THREE.Vector3()
+                            screenRef.current?.getWorldPosition(wp)
+                            doomLabel.position.set(wp.x + 0.40, wp.y + 0.15, wp.z)
+                            scene.add(doomLabel)
 
                             setTimeout(() => screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150)
-                            rectLight.color = new THREE.Color(0xffffff)
 
                             startDoom('freedoom2.wad')
                         }
@@ -442,7 +573,6 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                             resetMario()
 
                             setTimeout(() => screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150)
-                            rectLight.color = new THREE.Color(0xffffff)
 
                             // gameLoop.start()
                         }
@@ -501,6 +631,7 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
 
         const animate = () => {
             if (!animationRef.current) return;
+            controls.update();
 
             if(gameRef.current === 'sleep'){
                 if(lottieTextureRef1.current) lottieTextureRef1.current.needsUpdate = true;
@@ -532,11 +663,6 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
             </div>
             <div id="lottie1" className="lottie"></div>
             <div id="lottie2" className="lottie"></div>
-            {hint && (
-                <div className="toast">
-                    {hint}
-                </div>
-            )}
         </div>
     )
 }

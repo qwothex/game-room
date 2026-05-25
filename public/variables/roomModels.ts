@@ -1,1 +1,1 @@
-export const modelsList: String[] = ['TV2', 'Carpet', 'Gamepad', 'Console', 'DendyStand']
+export const modelsList: String[] = ['TV', 'Carpet', 'Gamepad', 'Console', 'DendyStand']

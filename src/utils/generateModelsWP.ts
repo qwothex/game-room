@@ -33,35 +33,13 @@ const generateModelsWP = (modelsList: String[]): Promise<THREE.Group> => {
       resolve(geometryGroup);
     };
 
-    let logoN = 1;
-
     modelsList.forEach((entry) => {
       const url = `models/${entry}/${entry}.gltf`;
 
       loader.load(url, (gltf) => {
         const root = gltf.scene;
 
-        if(root.name.includes('techLogo')){
-
-          const mesh = root.children[0] as THREE.Mesh
-
-          const mat = mesh.material as THREE.Material & { color: THREE.Color };
-
-          mesh.userData.originalColor = mat.color.clone();
-
-          // mat.color.set(0xffd037);
-          mat.color.set(0xcccccc);
-
-          scaleToSize(root, 0.2)
-          root.rotation.set(-Math.PI / 2, 0, 0)
-          logoN <= 3 
-            ? root.position.set(logoN * 0.25 - 0.75, 0.01, Math.random() * (2.25 - 1.75) + 1.75)
-            : root.position.set(logoN * 0.25 - 1.5, 0.01, Math.random() * (2.75 - 2.35) + 2.35)
-
-          logoN++;
-        }
-        
-        else if (root.name === 'Console') {
+        if (root.name === 'Console') {
           const cartridge = root.getObjectByName('Cartridge') as THREE.Mesh;
           const sticker = cartridge.getObjectByName("Cartridge_3_Cartridge_1001_0001_6") as THREE.Mesh;
           cartridge.name = 'donkeykong'
@@ -108,7 +86,7 @@ const generateModelsWP = (modelsList: String[]): Promise<THREE.Group> => {
 
         else{
           scaleToSize(root, 2.5)
-          geometryGroup.add(root);
+          // geometryGroup.add(root);
         }
 
         geometryGroup.add(root);
