@@ -152,8 +152,8 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
             })
 
             const consoleMesh = models.getObjectByName('Console') as THREE.Mesh;
-            consoleMesh.rotation.set(0, 0.8, 0);
-            consoleMesh.position.set(-1.5, 0.01, 2);
+            consoleMesh.rotation.set(0.015, 0.8, 0);
+            consoleMesh.position.set(-1.5, 0, 2);
             consoleMesh.traverse(child => {
                 if ((child as THREE.Mesh).isMesh) {
                     child.castShadow = true;
