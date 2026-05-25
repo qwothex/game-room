@@ -113,18 +113,14 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
 
             switch(gameRef.current){
                 case "donkeykong": {
-                    // e.preventDefault()
                     resolveCanvasGameKeyUp(e.key)
                     break;
                 }
                 case "doom": {
-                    // e.preventDefault()
                     resolveDoomKeysUp(e.key)
                     break;
                 }
             }
-
-            // if (e.key === 'Control') controls.enableZoom = false
         }
 
         document.addEventListener('keydown', handleKeyDown)
@@ -223,8 +219,6 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
         scene.add(directionalLight)
         scene.add(directionalLight.target)
 
-        // scene.add(new THREE.DirectionalLightHelper(directionalLight))
-
         const spotLight = new THREE.SpotLight(0xffffff, 4)
         spotLight.position.set(-0.25, 1, 1.2)
         spotLight.target.position.set(-0.25, 1, 2)
@@ -237,24 +231,6 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
         spotLight.shadow.bias = -0.0002;
         scene.add(spotLight)
         scene.add(spotLight.target)
-
-        // scene.add(new THREE.SpotLightHelper(spotLight))
-
-        // const rectLight = new THREE.RectAreaLight(0xffffff, 1, 2.5, 1.3) //4
-        // rectLight.position.set(0, 1, 1.5)
-        // rectLight.lookAt(0, 1, 2)
-        // scene.add(rectLight)
-
-        const controllerLight = new THREE.PointLight(0xffffff, 0)
-        controllerLight.position.set(1, 0.5, 2.5)
-        controllerLight.castShadow = true
-        controllerLight.shadow.mapSize.set(512, 512)
-        controllerLight.shadow.camera.near = 0.1
-        controllerLight.shadow.camera.far = 4
-        scene.add(controllerLight)
-
-        // scene.add(new THREE.PointLightHelper(controllerLight))
-        // scene.add(new THREE.CameraHelper(controllerLight.shadow.camera))
 
         const video = document.getElementById('glitch-video') as HTMLVideoElement;
         video.play()
@@ -380,10 +356,6 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                         intensity: 4,
                         duration: 0.4
                     });
-                    gsap.to(controllerLight, {
-                        intensity: 0,
-                        duration: 0.4
-                    });
                 }
 
                 if(gameRef.current === 'off') return
@@ -409,14 +381,9 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                         intensity: 0.025,
                         duration: 0.4
                     });
-                    gsap.to(controllerLight, {
-                        intensity: 0.5,
-                        duration: 0.4
-                    });
                 }
 
                 if(intersect.name === 'sleep1'){
-                    // isGameOn = false
 
                     setGame('sleep')
 
@@ -427,7 +394,6 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                 }
 
                 if(intersect.name === 'sleep2'){
-                    // isGameOn = false
 
                     setGame('sleep')
 
@@ -482,7 +448,6 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
 
                     spotLight.color = new THREE.Color(0xffffff)
 
-                    // isGameOn = false
                     video1.pause()
 
                     screenRef.current!.material = new THREE.MeshBasicMaterial({ map: glitchTextureRef.current })
@@ -499,8 +464,6 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                                 video1.play()
                             }, 1150)
                         }else if(intersect.parent!.name === 'crosstheroad'){
-                            
-                            // isGameOn = true
 
                             setGame('crosstheroad')
                             
@@ -514,7 +477,7 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                             setGame("digdug")
                             const wp = new THREE.Vector3()
                             screenRef.current?.getWorldPosition(wp)
-                            digLabel.position.set(wp.x + 0.40, wp.y + 1, wp.z + 1)
+                            digLabel.position.set(wp.x + 0.40, wp.y + 1, wp.z + 0.85)
                             scene.add(digLabel)
                         }
                         else if(intersect.parent!.name === 'doom'){
@@ -525,10 +488,12 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                             setGame("doom")
                             const wp = new THREE.Vector3()
                             screenRef.current?.getWorldPosition(wp)
-                            doomLabel.position.set(wp.x + 0.40, wp.y + 1, wp.z + 1)
-                            scene.add(doomLabel)
+                            doomLabel.position.set(wp.x + 0.40, wp.y + 1, wp.z + 0.85)
 
-                            setTimeout(() => screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150)
+                            setTimeout(() => {
+                                screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150
+                                scene.add(doomLabel)
+                            }, 1150)
 
                             startDoom('doom1.wad')
                         }
@@ -540,10 +505,12 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                             setGame("doom")
                             const wp = new THREE.Vector3()
                             screenRef.current?.getWorldPosition(wp)
-                            doomLabel.position.set(wp.x + 0.40, wp.y + 0.15, wp.z)
-                            scene.add(doomLabel)
+                            doomLabel.position.set(wp.x + 0.40, wp.y + 1, wp.z + 0.85)
 
-                            setTimeout(() => screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150)
+                            setTimeout(() => {
+                                screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150
+                                scene.add(doomLabel)
+                            }, 1150)
 
                             startDoom('freedoom1.wad')
                         }else if(intersect.parent!.name === 'freedoom2'){
@@ -554,16 +521,16 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                             setGame("doom")
                             const wp = new THREE.Vector3()
                             screenRef.current?.getWorldPosition(wp)
-                            doomLabel.position.set(wp.x + 0.40, wp.y + 0.15, wp.z)
-                            scene.add(doomLabel)
+                            doomLabel.position.set(wp.x + 0.40, wp.y + 1, wp.z + 0.85)
 
-                            setTimeout(() => screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150)
+                            setTimeout(() => {
+                                screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150
+                                scene.add(doomLabel)
+                            }, 1150)
 
                             startDoom('freedoom2.wad')
                         }
                         else if(intersect.parent!.name === 'donkeykong'){
-                            
-                            // isGameOn = true
                             
                             const texture = DonkeyKongModule.renderTarget.texture
                             texture.flipY = false;
@@ -573,8 +540,6 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
                             resetMario()
 
                             setTimeout(() => screenRef.current!.material = new THREE.MeshBasicMaterial({ map: texture}), 1150)
-
-                            // gameLoop.start()
                         }
 
                     }
@@ -617,7 +582,6 @@ const WorkingPlace:FC<{game: GamesType, setGame: (type: GamesType) => void}> = (
 
         const getSceneData = (): [THREE.WebGLRenderTarget, THREE.Scene, THREE.Camera, ((delta: number) => any) | undefined] => {
             switch (gameRef.current) {
-                // case 'rabbit': return [SpaceRabbitModule.renderTarget, SpaceRabbitModule.scene, SpaceRabbitModule.camera, SpaceRabbitModule.update];
                 case 'crosstheroad': return [CrossTheRoadModule.renderTarget, CrossTheRoadModule.scene, CrossTheRoadModule.camera, CrossTheRoadModule.update];
                 case 'doom': return [DoomModule.renderTarget, DoomModule.scene, DoomModule.camera, DoomModule.update];
                 case 'donkeykong': return [DonkeyKongModule.renderTarget, DonkeyKongModule.scene, DonkeyKongModule.camera, DonkeyKongModule.update];
